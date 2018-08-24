@@ -5,6 +5,7 @@ from hamcrest.core.assert_that import assert_that
 from hamcrest.core.core.isequal import equal_to
 
 from production import coordinate
+from production.boundaries_error import BoundariesError
 from production.coordinate import Coordinates
 from production.direction_error import DirectionError
 from production.snake import Snake
@@ -32,6 +33,16 @@ class Test(unittest.TestCase):
     def __setUpSnakeForMovingDownRightBorder(self):
         snake = Snake()
         snake.setSnakeCoordinates([Coordinates(20,20), Coordinates(20,19), Coordinates(20,18), Coordinates(20,17), Coordinates(20,16)])
+        return snake
+
+    def __setUpSnakeForMovingUpLeftBorderSafe(self):
+        snake = Snake()
+        snake.setSnakeCoordinates([Coordinates(2,2), Coordinates(2,3), Coordinates(2,4), Coordinates(2,5), Coordinates(2,6)])
+        return snake
+
+    def __setUpSnakeForMovingDownRightBorderSafe(self):
+        snake = Snake()
+        snake.setSnakeCoordinates([Coordinates(19,19), Coordinates(19,18), Coordinates(19,17), Coordinates(19,16), Coordinates(19,15)])
         return snake
 
     def __formatExpectedActual(self, expected, actual):
@@ -290,7 +301,35 @@ class Test(unittest.TestCase):
 
     def testSnakeConstraintsUp(self):
         snake = self.__setUpSnakeForMovingUpLeftBorder()
-        self.assertRaises(DirectionError, snake.move, 'U')
+        self.assertRaises(BoundariesError, snake.move, 'U')
+
+    def testSnakeConstraintsLeft(self):
+        snake = self.__setUpSnakeForMovingUpLeftBorder()
+        self.assertRaises(BoundariesError, snake.move, 'L')
+
+    def testSnakeConstraintsDown(self):
+        snake = self.__setUpSnakeForMovingDownRightBorder()
+        self.assertRaises(BoundariesError, snake.move, 'D')
+
+    def testSnakeConstraintsRight(self):
+        snake = self.__setUpSnakeForMovingDownRightBorder()
+        self.assertRaises(BoundariesError, snake.move, 'R')
+
+    def testSnakeConstraintsUpSafe(self):
+        snake = self.__setUpSnakeForMovingUpLeftBorderSafe()
+        snake.move('U')
+
+    def testSnakeConstraintsLeftSafe(self):
+        snake = self.__setUpSnakeForMovingUpLeftBorderSafe()
+        snake.move('L')
+
+    def testSnakeConstraintsDownSafe(self):
+        snake = self.__setUpSnakeForMovingDownRightBorderSafe()
+        snake.move('D')
+
+    def testSnakeConstraintsRightSafe(self):
+        snake = self.__setUpSnakeForMovingDownRightBorderSafe()
+        snake.move('R')
             
 # Coordinate class tests:
 
