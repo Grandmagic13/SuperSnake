@@ -10,6 +10,9 @@ class Coordinates(object):
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
     
+    def __ne__(self, other):
+        return self.x != other.x or self.y != other.y
+    
     def __str__(self):
         return "[x:{0},y:{1}]".format(self.x, self.y)
     

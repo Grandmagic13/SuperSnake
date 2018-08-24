@@ -26,11 +26,13 @@ emptyField = """ --------------------
 |                    |
  -------------------- """
 
+directionModifiers = {'R': Coordinates(1,0), 'L': Coordinates(-1,0), 'U': Coordinates(0,-1), 'D': Coordinates(0,1) }
+
 class Snake(object):
     
     #untested
     def start(self):
-        print self.draw(self.snakePosition)
+        print self.draw(self.snakePosition, self.foodPositions)
         direction = ""
         while direction != 'Q':
             direction = raw_input("Which direction do you want to move? Enter L, R, D, U for Left, Right, Down, Up, or Q to Quit!")
@@ -39,46 +41,74 @@ class Snake(object):
             except DirectionError as dirErr:
                 print dirErr.message
                 raw_input("Please provide a valid direction.\nWhich direction do you want to move? Enter L, R, D, U for Left, Right, Down, Up or Q to Quit!")
-            print self.draw(self.snakePosition)
+            print self.draw(self.snakePosition, self.foodPositions)
     #untested
 
     def __init__(self):
-        self.directionModifiers = {'R': Coordinates(1,0), 'L': Coordinates(-1,0), 'U': Coordinates(0,-1), 'D': Coordinates(0,1) }
         head = self.generateRandomHeadCoordinates()
         self.snakePosition = [head]
         tail = [Coordinates(head.x - i, head.y) for i in range(1,5)]
         self.snakePosition.extend(tail)
+        self.foodPositions = list()
+        self.generateRandomFoodCoordinates(4)
     
-    def draw(self, snakePositions):
+    def draw(self, snakePositions, foodPositions):
         gameMap = emptyField
         if(snakePositions is not None):
-            mapLines = gameMap.split("\n")
-            for coord in snakePositions:
-                line = list(mapLines[coord.y])
-                for i in range(len(line)):
-                    if i == coord.x:
-                        line[i] = '@'
-                mapLines[coord.y] = "".join(line)
-            gameMap = "\n".join(mapLines)
+            gameMap = self.__replaceSymbolsInPositionsOnMap('@', snakePositions, gameMap)
+        if(foodPositions is not None):
+            gameMap = self.__replaceSymbolsInPositionsOnMap('*', foodPositions, gameMap)
         return gameMap
     
+    def __replaceSymbolsInPositionsOnMap(self, symbol, positions, gameMap):
+        mapLines = gameMap.split("\n")
+        for coord in positions:
+            line = list(mapLines[coord.y])
+            for i in range(len(line)):
+                if i == coord.x:
+                    line[i] = symbol
+            mapLines[coord.y] = "".join(line)
+        gameMap = "\n".join(mapLines)
+        return gameMap
+            
     def generateRandomHeadCoordinates(self):
         return Coordinates(random.randint(6,19), random.randint(1,20))
+
+    def generateRandomFoodCoordinates(self, quantity):
+        for i in range(quantity):
+            self.foodPositions.append(self.__createValidFoodCoordinates())
     
-    def setCoordinates(self, coordinates):
+    def __createValidFoodCoordinates(self):
+        while True:
+            foodPosition = Coordinates(random.randint(1,20), random.randint(1,20))
+            if (foodPosition not in self.snakePosition) and (foodPosition not in self.foodPositions):
+                return foodPosition
+    
+    def setSnakeCoordinates(self, coordinates):
         self.snakePosition = coordinates
         
-    def getCoordinates(self):
+    def getSnakeCoordinates(self):
         return self.snakePosition
+    
+    def setFoodCoordinates(self, coordinates):
+        self.foodPositions = coordinates
+    
+    def getFoodCoordinates(self):
+        return self.foodPositions
         
     def move(self, direction):
         if direction not in ['R', 'L', 'U', 'D']:
             raise DirectionError("Unexpected direction: '{0}' !".format(direction))
-        newHead = self.snakePosition[0] + self.directionModifiers[direction]
+        newHead = self.snakePosition[0] + directionModifiers[direction]
         if newHead == self.snakePosition[1]:
             raise DirectionError("Snake cannot go in direction of body!")            
-        self.snakePosition.pop()
+        if newHead in self.foodPositions:
+            self.foodPositions.remove(newHead)
+        else:
+            self.snakePosition.pop()
         newTail = self.snakePosition
         self.snakePosition = [newHead]
         self.snakePosition.extend(newTail)
+        if len(self.foodPositions) < 4:
+            self.generateRandomFoodCoordinates(1)
         
